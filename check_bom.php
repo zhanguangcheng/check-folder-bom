@@ -22,6 +22,8 @@ class Process
 
     public $allowExtension = array('html', 'css', 'js', 'php');
 
+    public $enableRemoveBom = false;
+
     public function run($dir = null)
     {
         if (is_null($dir)) {
@@ -29,13 +31,16 @@ class Process
         }
         if ($handle = opendir($dir)) {
             while (($file = readdir($handle)) !== false) {
-                if ($file != '.' && $file != '..') {
+                if (!in_array($file, array('.', '..', '.git', '.svn'))) {
                     $fullpath = realpath($dir . "/" . $file);
                     if (!is_dir($fullpath)) {
                         $ext = pathinfo($fullpath, PATHINFO_EXTENSION);
                         if (in_array($ext, $this->allowExtension)) {
                             if ($this->checkBom($fullpath)) {
                                 echo $fullpath, PHP_EOL;
+                                if ($this->enableRemoveBom) {
+                                    $this->removeBom($fullpath);
+                                }
                             }
                         }
                     } else {
@@ -53,5 +58,10 @@ class Process
         $content = fread($handle, 3);
         fclose($handle);
         return $content == "\xEF\xBB\xBF";
+    }
+
+    public function removeBom($filename)
+    {
+        return file_put_contents($filename, substr(file_get_contents($filename), 3));
     }
 }
