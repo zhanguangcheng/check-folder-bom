@@ -13,7 +13,7 @@ $start = microtime(true);
 $process = new Process;
 $process->run($argv[1]);
 
-echo 'done', PHP_EOL;
+echo PHP_EOL, 'done', PHP_EOL;
 echo 'usage time: ', microtime(true) - $start;
 
 class Process
@@ -26,6 +26,7 @@ class Process
 
     public function run($dir = null)
     {
+        static $i = 0;
         if (is_null($dir)) {
             $dir = $this->checkDir;
         }
@@ -34,10 +35,12 @@ class Process
                 if (!in_array($file, array('.', '..', '.git', '.svn'))) {
                     $fullpath = realpath($dir . "/" . $file);
                     if (!is_dir($fullpath)) {
+                        $i++;
+                        printf("\rCheck file count:%d", $i);
                         $ext = pathinfo($fullpath, PATHINFO_EXTENSION);
                         if (in_array($ext, $this->allowExtension)) {
                             if ($this->checkBom($fullpath)) {
-                                echo $fullpath, PHP_EOL;
+                                echo PHP_EOL,$fullpath, PHP_EOL;
                                 if ($this->enableRemoveBom) {
                                     $this->removeBom($fullpath);
                                 }
